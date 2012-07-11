@@ -1,7 +1,6 @@
 #
 #@auther = Michihiro Fukuhara
 #@date = 2012/07/02
-#@version:0.1.2
 
 ##Parameter Setting
 ch24 <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
