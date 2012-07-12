@@ -93,3 +93,5 @@ eeps <- function(){
 	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
 	dev.off()
 }
+
+#日本語のコメントアウト
