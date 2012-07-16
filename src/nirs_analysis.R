@@ -28,6 +28,7 @@ nirs_dataset <- function(
 	if(info == TRUE){
 		nirs_info(filename,dirname)
 	}
+	#データの種類選択(22or24ch、integral or continuous)
 	if(measurement == "integral"){
 		switch(ch_size,
 				"24" = nirs_dataset1(filename,dirname),
@@ -75,7 +76,7 @@ nirs_dataset4 <- function(filename,dirname){
 # data is numeric
 nirs_freq = 10
 
-nirs_fft <- function(data,visible=TRUE){
+nirs_fft <- function(data,visible=FALSE){
 	sampling = (length(data))
 	n = 0:(sampling-1)
 	samplefreq = nirs_freq
@@ -83,6 +84,7 @@ nirs_fft <- function(data,visible=TRUE){
 	f=(n*samplefreq)/sampling
 	wave = data
 	spec = abs(fft(wave))^2
+	#fft結果の表示
 	if(visible==TRUE){
 		par(mfrow = c(2,1))
 		plot(t,wave,type="l")
@@ -95,6 +97,7 @@ nirs_fft <- function(data,visible=TRUE){
 	return(list(freq = f,s=s_number,spect = spec))
 }
 
+#列データを間引く
 select_data <- function(data,s){
 	result <- NULL
 	for(i in 1:s){
@@ -103,6 +106,7 @@ select_data <- function(data,s){
 	return(list(result = result,s_number = s))
 }
 
+#簡易作図関数
 eeps <- function(){
 	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
 	dev.off()
