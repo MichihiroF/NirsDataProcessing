@@ -1,5 +1,8 @@
-#
-#@date = 2012/07/02
+#@date = 2012/07/16
+#ETG-7100対応
+#####実装関数
+# nirs_dataset：nirsデータの読み込み
+# nirs_fft：フーリエ変換
 
 ch24 <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
 		"CH10","CH11","CH12","CH13","CH14","CH15","CH16","CH17","CH18",
@@ -14,18 +17,50 @@ ch24_con <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
 		"CH10","CH11","CH12","CH13","CH14","CH15","CH16","CH17","CH18",
 		"CH19","CH20","CH21","CH22","CH23","CH24","Mark","Time","BodyMovement","RemoveMark","PreScan")
 
+#NIRSデータの読み込み
+nirs_dataset <- function(
+		filename,
+		dirname,
+		measurement=c("continuous","integral"),
+		ch_size=c("22","24"),
+		info = FALSE){
+	#ヘッダーの情報を表示
+	if(info == TRUE){
+		nirs_info(filename,dirname)
+	}
+	if(measurement == "integral"){
+		switch(ch_size,
+				"24" = nirs_dataset1(filename,dirname),
+				"22" = nirs_dataset2(filename,dirname)
+		)
+	}else{
+		switch(ch_size,
+				"22" = nirs_dataset3(filename,dirname),
+				"24" = nirs_dataset4(filename,dirname)
+		)
+	}
+}
+
+nirs_info <- function(filename,dirname){
+	file1 <- paste(dirname,filename,sep="/")
+	f <- file(file1,"r")
+	for(i in 1:31){
+		res <- readLines(con=f,1)
+		print(res)
+	}
+	close(f)
+}
+
 #24ch*integral ver.
 nirs_dataset1 <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
 	nirsdata <- read.csv(file1,col.names=ch24,skip=40)
 }
-
 #22ch*integral ver.
 nirs_dataset2 <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
 	nirsdata <- read.csv(file1,col.names=ch22,skip=40)
 }
-
 #22ch*continuous ver.
 nirs_dataset3 <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
@@ -35,27 +70,6 @@ nirs_dataset3 <- function(filename,dirname){
 nirs_dataset4 <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
 	nirsdata <- read.csv(file1,col.names=ch24_con,skip=40)
-}
-
-#
-#nirs_dataset
-nirs_dataset <- function(
-		filename,
-		dirname,
-		measurement=c("continuous","integral"),
-		ch_size=c("22","24"))
-{
-	if(measurement == "integral"){
-		switch(ch_size,
-				"24" = nirs_dataset1(filename,dirname),
-				"22" = nirs_dataset2(filename,dirname)
-				)
-	}else{
-		switch(ch_size,
-				"22" = nirs_dataset3(filename,dirname),
-				"24" = nirs_dataset4(filename,dirname)
-			)
-	}
 }
 
 # data is numeric
@@ -93,5 +107,3 @@ eeps <- function(){
 	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
 	dev.off()
 }
-
-#日本語のコメントアウト
