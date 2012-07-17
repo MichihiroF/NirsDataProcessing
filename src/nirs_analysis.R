@@ -41,7 +41,6 @@ nirs_dataset <- function(
 		)
 	}
 }
-
 nirs_info <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
 	f <- file(file1,"r")
@@ -73,9 +72,8 @@ nirs_dataset4 <- function(filename,dirname){
 	nirsdata <- read.csv(file1,col.names=ch24_con,skip=40)
 }
 
-# data is numeric
+# フーリエ変換
 nirs_freq = 10
-
 nirs_fft <- function(data,visible=FALSE){
 	sampling = (length(data))
 	n = 0:(sampling-1)
@@ -97,7 +95,7 @@ nirs_fft <- function(data,visible=FALSE){
 	return(list(freq = f,s=s_number,spect = spec))
 }
 
-#列データを間引く
+#データを間引く
 select_data <- function(data,s){
 	result <- NULL
 	for(i in 1:s){
@@ -106,7 +104,7 @@ select_data <- function(data,s){
 	return(list(result = result,s_number = s))
 }
 
-#簡易作図関数
+#簡易図保存
 eeps <- function(){
 	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
 	dev.off()
