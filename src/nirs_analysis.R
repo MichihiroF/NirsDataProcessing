@@ -41,6 +41,8 @@ nirs_dataset <- function(
 		)
 	}
 }
+
+#nirsのヘッダー情報見る
 nirs_info <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
 	f <- file(file1,"r")
