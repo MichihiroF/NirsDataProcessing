@@ -3,6 +3,7 @@
 #####実装関数
 # nirs_dataset：nirsデータの読み込み
 # nirs_fft：フーリエ変換
+######################################################
 
 ch24 <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
 		"CH10","CH11","CH12","CH13","CH14","CH15","CH16","CH17","CH18",
@@ -77,6 +78,9 @@ nirs_dataset4 <- function(filename,dirname){
 # フーリエ変換
 nirs_freq = 10
 nirs_fft <- function(data,visible=FALSE){
+	if (!is.numeric(data)) {
+		stop("not numeric !")
+	}
 	sampling = (length(data))
 	n = 0:(sampling-1)
 	samplefreq = nirs_freq
@@ -89,7 +93,7 @@ nirs_fft <- function(data,visible=FALSE){
 		par(mfrow = c(2,1))
 		plot(t,wave,type="l")
 		xmax = samplefreq/2
-		plot(f,spec,type="l",col = "navy",xlim=c(0,xmax))
+		plot(f,spec,type="l",col = "navy",log="y",xlim=c(0,xmax))
 	}
 	s_number = round(sampling/2)
 	f <- f[1:s_number]
@@ -110,4 +114,19 @@ select_data <- function(data,s){
 eeps <- function(){
 	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
 	dev.off()
+}
+
+#ハミング関数
+hamming <- function(data){
+	pi = 3.14
+	data_length <- length(data)
+	result <- NULL
+	for(i in 1:data_length){
+		if(i != data_length){
+			result <- append(result,(data[i]+0.54 - 0.46*cos((2*pi*i)/(data_length-1))))
+		}else{
+			result <- append(result,0)
+		}
+	}
+	return(list(result=result))
 }
