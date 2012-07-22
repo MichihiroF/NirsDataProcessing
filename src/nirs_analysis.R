@@ -134,7 +134,12 @@ hamming <- function(data){
 }
 
 #ベースライン処理
-mbaseline <-function(data,Pretime,Posttime,visible = TRUE){
+mbaseline <-function(
+		data, #時系列データ
+		Pretime, #pretimeの範囲を指定（例：Pretime = 200:300）
+		Posttime, #posttimeの範囲を指定
+		visible = TRUE #実行結果をプロットするかどうか
+		){
 	#PretimeとPosttimeのデータをBaselineに格納
 	PreData <- data.frame(Pretime,data[Pretime])
 	PostData <- data.frame(Posttime,data[Posttime])
