@@ -1,8 +1,9 @@
-#@date = 2012/07/16
+#@date = 2012/07/22
 #ETG-7100対応
 #####実装関数
 # nirs_dataset：nirsデータの読み込み
 # nirs_fft：フーリエ変換
+# hamming：ハミング関数を作成
 ######################################################
 
 ch24 <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
@@ -116,7 +117,7 @@ eeps <- function(){
 	dev.off()
 }
 
-#ハミング関数
+#ハミング関数作成
 hamming <- function(data){
 	pi = 3.14
 	data_length <- length(data)
@@ -129,4 +130,40 @@ hamming <- function(data){
 		}
 	}
 	return(list(result=result))
+}
+
+#ベースライン処理
+mbaseline <-function(data,Pretime,Posttime,visual = TRUE){
+	#PretimeとPosttimeのデータをBaselineに格納
+	PreData <- data.frame(Pretime,data[Pretime])
+	PostData <- data.frame(Posttime,data[Posttime])
+	colnames(PreData) <- c("Time","Data")
+	colnames(PostData) <- c("Time","Data")
+	Baseline <- rbind(PreData,PostData)
+	##最小二乗法の実行 (y=a*x+b)
+	res = lm(Baseline[,"Data"]~Baseline[,"Time"])
+	a <- res$coefficients[2]
+	b <- res$coefficients[1]
+	x <- Baseline[,"Time"]
+	y <- a*x+b
+	#ベースライン後のデータ作成(yy = a*xx+b)
+	x_min <- PreData[1,"Time"]
+	y_min <- PostData[length(PostData[,"Time"]),"Time"]
+	xx <- c(1:length(data[x_min:y_min]))
+	yy <-data[x_min:y_min]- (a*xx+b)
+	#結果のグラフ化
+	if(visual==TRUE){
+		oldpar <- par()
+		on.exit(par(oldpar))
+		par(mfrow=c(3,1))
+		#data全体の作図と、Fitting直線の表示（処理する部分のみ）
+		plot(data,type="l",ylab="data",xlab="Alldata")
+		lines(x,y,col="red")
+		#ベースラインの範囲のデータとFitting直線のみ表示
+		plot(data[x_min:y_min],type="l",ylab="data",xlab="Baselinedata (before)")
+		lines(x,y,col="red")
+		#ベースライン後のデータの出力
+		plot(xx,yy,type="l",ylab="data",xlab="Baselinedata (After)")
+	}
+	return(list(x=xx,y=xx,a=a,b=b))
 }
