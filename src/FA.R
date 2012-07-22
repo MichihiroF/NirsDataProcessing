@@ -27,13 +27,15 @@ mfactanal <- function(
 		s_number,
 		fmethod,
 		fa_rotate,
-		visible=TRUE){
-	#被験者数とデータ長
+		visible=TRUE,
+		cluster=TRUE){	
+	#被験者数とデータ長の取得
 	nnumber <- length(data[1,])
 	data_length <- length(data[,1])
 
 	###########標準化###########
 	if(std==TRUE){
+		print("STD")
 		s_data <- NULL
 		for(i in 1:nnumber){
 			tmp <- scale(data[,i])
@@ -43,8 +45,9 @@ mfactanal <- function(
 	}else{
 		s_res <- data
 	}
-	###########フーリエ変換###########
+	###########フーリエ変換###########	
 	if(fft == TRUE){
+		print("FFT")
 		fft_data <- NULL
 		for(i in 1:nnumber){
 			tmp <- nirs_fft(s_res[,i],F)$spect
@@ -57,6 +60,7 @@ mfactanal <- function(
 
 	###########データの削減、間引き###########
 	if(select == TRUE){
+		print("Select")
 		sel_data <- NULL
 		for(i in 1:nnumber){
 			tmp <-select_data(fft_res[,i][1:round((max_Hz*data_length)/10)],s_number)$result
@@ -68,10 +72,12 @@ mfactanal <- function(
 	}
 	#行列ラベルの設定
 	###########Parallel Analysis
+	
 	fnumber <- fa.parallel(sel_res,fa="n")$nfact
 	
 	###########Factor analysis###########
 	#fm = ml,pa,gls,wls,minres
+	
 	factres = fa(sel_res, nfactors=fnumber ,rotate=fa_rotate, fm=fmethod, scores=T)
 	#結果Logの出力
 	###########結果の表示###########
@@ -84,7 +90,7 @@ mfactanal <- function(
 		#barplot(factres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");
 		#axis(side=2,at=c(-0.2,0.0,1.0));
 	}
-	if((visible==TRUE) && (fnumber >1)){
+	if((visible==TRUE) && (fnumber >2)){
 		par(mfrow=c(3,1),mex=0.8,ps=25,at=c(-0.2,0.0,1.0))
 		barplot(factres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");
 		axis(side=2,at=c(-0.2,0.0,1.0));
@@ -92,6 +98,15 @@ mfactanal <- function(
 		axis(side=2,at=c(-0.2,0.0,1.0));
 		barplot(factres$loading[,3],ylim=c(-0.2,1.0),yaxt="n");
 		axis(side=2,at=c(-0.2,0.0,1.0));
+	}
+	if(cluster == TRUE){
+		if(fnumber!=1){
+			clst = kmeans(factres$loading[,],fnumber)
+		}else{
+			clst = kmeans(factres$loading[,],2)	
+		}
+		print("Cluster(kmeans):")
+		print(clst)
 	}
 	return(factres)
 }
