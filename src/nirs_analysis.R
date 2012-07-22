@@ -133,7 +133,7 @@ hamming <- function(data){
 }
 
 #ベースライン処理
-mbaseline <-function(data,Pretime,Posttime,visual = TRUE){
+mbaseline <-function(data,Pretime,Posttime,visible = TRUE){
 	#PretimeとPosttimeのデータをBaselineに格納
 	PreData <- data.frame(Pretime,data[Pretime])
 	PostData <- data.frame(Posttime,data[Posttime])
@@ -152,18 +152,16 @@ mbaseline <-function(data,Pretime,Posttime,visual = TRUE){
 	xx <- c(1:length(data[x_min:y_min]))
 	yy <-data[x_min:y_min]- (a*xx+b)
 	#結果のグラフ化
-	if(visual==TRUE){
-		oldpar <- par()
-		on.exit(par(oldpar))
+	if(visible==TRUE){
 		par(mfrow=c(3,1))
 		#data全体の作図と、Fitting直線の表示（処理する部分のみ）
 		plot(data,type="l",ylab="data",xlab="Alldata")
 		lines(x,y,col="red")
 		#ベースラインの範囲のデータとFitting直線のみ表示
-		plot(data[x_min:y_min],type="l",ylab="data",xlab="Baselinedata (before)")
+		plot(data[x_min:y_min],type="l",ylab="data",xlab="Baselinedata (Before)")
 		lines(x,y,col="red")
 		#ベースライン後のデータの出力
 		plot(xx,yy,type="l",ylab="data",xlab="Baselinedata (After)")
 	}
-	return(list(x=xx,y=xx,a=a,b=b))
+	return(list(x=xx,y=yy,a=a,b=b))
 }
