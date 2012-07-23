@@ -129,7 +129,8 @@ hamming <- function(data){
 	result <- NULL
 	for(i in 1:data_length){
 		if(i != data_length){
-			result <- append(result,(data[i]+0.54 - 0.46*cos((2*pi*i)/(data_length-1))))
+			ham <- 0.54 - 0.46*cos((2*pi*i)/(data_length-1))
+			result <- append(result,(data[i]*ham))
 		}else{
 			result <- append(result,0)
 		}
