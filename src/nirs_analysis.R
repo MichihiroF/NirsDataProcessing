@@ -1,12 +1,16 @@
-#@date = 2012/07/22
+#@date = 2012/07/23
 #ETG-7100対応
 #####実装関数
 # nirs_dataset：nirsデータの読み込み
 # nirs_fft：フーリエ変換
 # hamming：ハミング関数を作成
 # baseline：ベースライン処理
+# mSMA：移動平均処理
 ######################################################
+#パッケージ
+library(TTR) #移動平均用
 
+#パラメータ
 ch24 <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
 		"CH10","CH11","CH12","CH13","CH14","CH15","CH16","CH17","CH18",
 		"CH19","CH20","CH21","CH22","CH23","CH24","Mark","Time")
@@ -95,7 +99,7 @@ nirs_fft <- function(data,visible=FALSE){
 		par(mfrow = c(2,1))
 		plot(t,wave,type="l")
 		xmax = samplefreq/2
-		plot(f,spec,type="l",col = "navy",log="y",xlim=c(0,xmax))
+		plot(f,spec,type="l",col = "navy",xlim=c(0,xmax))
 	}
 	s_number = round(sampling/2)
 	f <- f[1:s_number]
@@ -141,22 +145,25 @@ mbaseline <-function(
 		visible = TRUE #実行結果をプロットするかどうか
 		){
 	#PretimeとPosttimeのデータをBaselineに格納
-	PreData <- data.frame(Pretime,data[Pretime])
+	PreData  <- data.frame(Pretime,data[Pretime])
 	PostData <- data.frame(Posttime,data[Posttime])
 	colnames(PreData) <- c("Time","Data")
 	colnames(PostData) <- c("Time","Data")
 	Baseline <- rbind(PreData,PostData)
+	
 	##最小二乗法の実行 (y=a*x+b)
 	res = lm(Baseline[,"Data"]~Baseline[,"Time"])
 	a <- res$coefficients[2]
 	b <- res$coefficients[1]
 	x <- Baseline[,"Time"]
 	y <- a*x+b
+	
 	#ベースライン後のデータ作成(yy = a*xx+b)
 	x_min <- PreData[1,"Time"]
 	y_min <- PostData[length(PostData[,"Time"]),"Time"]
 	xx <- c(1:length(data[x_min:y_min]))
 	yy <-data[x_min:y_min]- (a*xx+b)
+	
 	#結果のグラフ化
 	if(visible==TRUE){
 		par(mfrow=c(3,1))
@@ -170,4 +177,21 @@ mbaseline <-function(
 		plot(xx,yy,type="l",ylab="data",xlab="Baselinedata (After)")
 	}
 	return(list(x=xx,y=yy,a=a,b=b))
+}
+
+#移動平均処理（NAを省く）
+mSMA <- function(data,l){
+	sma_data = SMA(data,l)
+	res = sma_data[l,length(sma_data)]
+}
+
+#タスク期間を色付けして描画
+task_plot <- function(data,start,end,y_lim,x_lab,y_lab){
+	x0 = start
+	x1 = end
+	y0 = -1.0
+	y1 = 1.0
+	bgname = "red"
+	plot(data,xlab=x_lab,ylab=y_lab,type="l",ylim=y_lim,xaxt="n",yaxt="n");
+	rect(x0,y0,x1,y1,col = bgname,density=10);axis(side=2,at=y_lim-0.1);axis(side=1,at=c(x0,x1));
 }
