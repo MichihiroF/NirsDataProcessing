@@ -3,7 +3,7 @@
 #nirs_analysis.Rの関数も使用
 ######################################################
 
-#Install Package
+#パッケージ
 library(psych)
 library(MCMCpack)
 
@@ -45,6 +45,7 @@ mfactanal <- function(
 	}else{
 		s_res <- data
 	}
+	
 	###########フーリエ変換###########	
 	if(fft == TRUE){
 		print("FFT")
@@ -72,13 +73,13 @@ mfactanal <- function(
 	}
 	#行列ラベルの設定
 	###########Parallel Analysis
-	
-	fnumber <- fa.parallel(sel_res,fa="n")$nfact
-	
+	pa_res <- fa.parallel(sel_res,fa="n")
+	fnumber <- pa_res$nfact
+
 	###########Factor analysis###########
 	#fm = ml,pa,gls,wls,minres
-	
 	factres = fa(sel_res, nfactors=fnumber ,rotate=fa_rotate, fm=fmethod, scores=T)
+
 	#結果Logの出力
 	###########結果の表示###########
 	if((visible==TRUE) && (fnumber >1)){
@@ -108,5 +109,35 @@ mfactanal <- function(
 		print("Cluster(kmeans):")
 		print(clst)
 	}
-	return(factres)
+	return(list(factres=factres,cluster=clst,pa = pa_res))
+}
+
+multi_est <- function(dt,rotate){
+	fa_n= fa.parallel(dt,fa="fa")$nfact
+	fa_rotate = rotate
+	#最尤法(psych)(ML)
+	factMLres = fa(dt, nfactors=fa_n ,rotate=fa_rotate, fm="ml", scores=T)
+	#主因子法(PFA)
+	factPAres = fa(dt, nfactors=fa_n ,rotate=fa_rotate, fm="pa", scores=T)
+	#一般化最小二乗法
+	factGLSres <- fa(dt, nfactors=fa_n ,rotate=fa_rotate, fm="gls", scores=T)
+	#重みつき最小二乗法
+	factWLSres <- fa(dt, nfactors=fa_n ,rotate=fa_rotate, fm="wls", scores=T)
+	#最小残差法（重みづけない最小二乗法）
+	factOLSres <- fa(dt, nfactors=fa_n ,rotate=fa_rotate, fm="minres", scores=T)
+	if(fa_n != 1){
+		par(mfrow=c(3,2))
+		biplot(factMLres$scores,factMLres$loading,var.axes = TRUE,expand=1.0,arrow.len = 0.1,xlab="ML")
+		biplot(factPAres$scores,factPAres$loading,var.axes = TRUE,expand=1.0,arrow.len = 0.1,xlab="PFA")
+		biplot(factGLSres$scores,factGLSres$loading,var.axes = TRUE,expand=1.0,arrow.len = 0.1,xlab="GLS")
+		biplot(factWLSres$scores,factWLSres$loading,var.axes = TRUE,expand=1.0,arrow.len = 0.1,xlab="WLS")
+		biplot(factOLSres$scores,factOLSres$loading,var.axes = TRUE,expand=1.0,arrow.len = 0.1,xlab="MinRes")
+	}else{
+		par(mfrow=c(3,2))
+		barplot(factMLres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");axis(side=2,at=c(-0.4,0.0,1.0));
+		barplot(factPAres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");axis(side=2,at=c(-0.4,0.0,1.0));
+		barplot(factGLSres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");axis(side=2,at=c(-0.4,0.0,1.0));
+		barplot(factWLSres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");axis(side=2,at=c(-0.4,0.0,1.0));
+		barplot(factOLSres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");axis(side=2,at=c(-0.4,0.0,1.0));
+	}
 }
