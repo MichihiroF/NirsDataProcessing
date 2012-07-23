@@ -122,22 +122,6 @@ eeps <- function(){
 	dev.off()
 }
 
-#ハミング関数作成
-hamming <- function(data){
-	pi = 3.14
-	data_length <- length(data)
-	result <- NULL
-	for(i in 1:data_length){
-		if(i != data_length){
-			ham <- 0.54 - 0.46*cos((2*pi*i)/(data_length-1))
-			result <- append(result,(data[i]*ham))
-		}else{
-			result <- append(result,0)
-		}
-	}
-	return(list(result=result))
-}
-
 #ベースライン処理
 mbaseline <-function(
 		data, #時系列データ
@@ -195,4 +179,55 @@ task_plot <- function(data,start,end,y_lim,x_lab,y_lab){
 	bgname = "red"
 	plot(data,xlab=x_lab,ylab=y_lab,type="l",ylim=y_lim,xaxt="n",yaxt="n");
 	rect(x0,y0,x1,y1,col = bgname,density=10);axis(side=2,at=y_lim-0.1);axis(side=1,at=c(x0,x1));
+}
+
+##############窓関数###############
+#短径窓を掛ける
+rectangularW <- function(data){
+	data_length <- length(data)
+	result <- NULL
+	result <- append(result,0)
+	for(i in 2:data_length){
+		if(i != data_length){
+			result <- append(result,data[i])
+		}else{
+			result <- append(result,0)
+		}
+	}
+	return(result)
+}
+
+#ハミング窓を掛ける
+hammingW <- function(data){
+	pi = 3.141593
+	data_length <- length(data)
+	result <- NULL
+	for(i in 1:data_length){
+		ham <- 0.54 - 0.46*cos((2*pi*i)/(data_length-1))
+		result <- append(result,(data[i]*ham))
+	}
+	return(result)
+}
+
+#ハニング窓を掛ける
+hanningW <- function(data){
+	pi = 3.141593
+	data_length <- length(data)
+	result <- NULL
+	for(i in 1:data_length){
+			han <- 0.5 - 0.5*cos((2*pi*i)/(data_length-1))
+			result <- append(result,(data[i]*han))
+	}
+	return(result)
+}
+
+#ガウス窓を掛ける
+gaussianW <- function(data,m){
+	data_length <- length(data)
+	result <- NULL
+	for(i in 1:data_length){
+			gau <- exp(((-2*(m^2))/(data_length-1)^2)*(i-(data_length-1)/2)^2)
+			result <- append(result,(data[i]*gau))
+	}
+	return(result)
 }
