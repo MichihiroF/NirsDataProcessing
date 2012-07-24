@@ -20,15 +20,16 @@ library(MCMCpack)
 
 mfactanal <- function(
 		data,
-		std =TRUE,
-		fft=TRUE,
-		select = TRUE,
+		std =FALSE,
+		fft=FALSE,
+		window = FALSE,
+		select = FALSE,
 		max_Hz = 5,
 		s_number,
 		fmethod,
 		fa_rotate,
 		visible=TRUE,
-		cluster=TRUE){	
+		cluster=TRUE){
 	#被験者数とデータ長の取得
 	nnumber <- length(data[1,])
 	data_length <- length(data[,1])
@@ -47,16 +48,28 @@ mfactanal <- function(
 	}
 	
 	###########フーリエ変換###########	
+	#窓関数の畳込み
+	if(window == TRUE){
+		win_data <- NULL
+		for(i in 1:nnumber){
+			tmp <- hammingW(s_res[,i])
+			win_data <- append(win_data,tmp)
+		}
+		win_res <- matrix(win_data,data_length,nnumber)
+	}else{
+		win_res <- s_res
+	}
+	
 	if(fft == TRUE){
 		print("FFT")
 		fft_data <- NULL
 		for(i in 1:nnumber){
-			tmp <- nirs_fft(s_res[,i],F)$spect
+			tmp <- nirs_fft(win_res[,i],F)$spect
 			fft_data <- append(fft_data,tmp)
 		}
 		fft_res <- matrix(fft_data,data_length/2,nnumber)
 	}else{
-		fft_res <- s_res
+		fft_res <- win_res
 	}
 
 	###########データの削減、間引き###########
@@ -91,7 +104,7 @@ mfactanal <- function(
 		#barplot(factres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");
 		#axis(side=2,at=c(-0.2,0.0,1.0));
 	}
-	if((visible==TRUE) && (fnumber >2)){
+	if((visible==TRUE) && (fnumber >1000)){
 		par(mfrow=c(3,1),mex=0.8,ps=25,at=c(-0.2,0.0,1.0))
 		barplot(factres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");
 		axis(side=2,at=c(-0.2,0.0,1.0));
