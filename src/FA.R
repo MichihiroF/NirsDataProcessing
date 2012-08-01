@@ -21,6 +21,7 @@ library(MCMCpack)
 mfactanal <- function(
 		data,
 		std =FALSE,
+		dif = FALSE,
 		fft=FALSE,
 		window = FALSE,
 		select = FALSE,
@@ -33,18 +34,31 @@ mfactanal <- function(
 	#被験者数とデータ長の取得
 	nnumber <- length(data[1,])
 	data_length <- length(data[,1])
-
+	
+	#####ラグ処理#####
+	if(dif == TRUE){
+		print("DIFF")
+		dif_data <- NULL
+		for(i in 1:nnumber){
+			tmp <- diff(data[,i])
+			dif_data <- append(dif_data,tmp)
+		}
+		dif_res <- matrix(dif_data,data_length,nnumber)
+	}else{
+		dif_res <- data
+	}
+	
 	###########標準化###########
 	if(std==TRUE){
 		print("STD")
 		s_data <- NULL
 		for(i in 1:nnumber){
-			tmp <- scale(data[,i])
+			tmp <- scale(dif_res[,i])
 			s_data <- append(s_data,tmp)
 		}
 		s_res <- matrix(s_data,data_length,nnumber)
 	}else{
-		s_res <- data
+		s_res <- dif_res
 	}
 	
 	###########フーリエ変換###########	
@@ -122,7 +136,7 @@ mfactanal <- function(
 		print("Cluster(kmeans):")
 		print(clst)
 	}
-	return(list(factres=factres,cluster=clst,pa = pa_res))
+	return(list(factres=factres,cluster=clst,dif_res=dif_res,pa = pa_res,s_res=s_res,win_res=win_res,fft_res=fft_res))
 }
 
 multi_est <- function(dt,rotate){
