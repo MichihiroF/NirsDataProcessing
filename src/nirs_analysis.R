@@ -6,6 +6,7 @@
 # hamming：ハミング関数を作成
 # baseline：ベースライン処理
 # mSMA：移動平均処理
+#窓関数色々：短絡、ハミング、ハニング、ガウス
 ######################################################
 #パッケージ
 library(TTR) #移動平均用
@@ -23,6 +24,12 @@ ch22_con <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
 ch24_con <- c("Count","CH1","CH2","CH3","CH4","CH5","CH6","CH7","CH8","CH9",
 		"CH10","CH11","CH12","CH13","CH14","CH15","CH16","CH17","CH18",
 		"CH19","CH20","CH21","CH22","CH23","CH24","Mark","Time","BodyMovement","RemoveMark","PreScan")
+
+#hot
+ch_2 <-c("Time","Bloodflow(Left)","Bloodflow(Left1cm)","Bloodflow(Left13cm)","Bloodflow(Right)","Bloodflow(Right1cm)","Bloodflow(Right3cm)",
+		"Pulse(Left)","Pulse(Right)","LF/HF(left)","LF/HF(Right)",
+		"temparature","x-axis","y-axis","z-axis","DeepBreathDegree","Chart_x","Chart_y","Chart_syogen","Chart_radius",
+		"","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","")
 
 #NIRSデータの読み込み
 nirs_dataset <- function(
@@ -79,6 +86,12 @@ nirs_dataset3 <- function(filename,dirname){
 nirs_dataset4 <- function(filename,dirname){
 	file1 <- paste(dirname,filename,sep="/")
 	nirsdata <- read.csv(file1,col.names=ch24_con,skip=40)
+}
+
+#hot
+nirs_hot <- function(dirname,filename){
+	file1 <- paste(dirname,filename,sep="/")
+	read.csv(file1,col.names = ch_2,skip=24)
 }
 
 # フーリエ変換
@@ -167,7 +180,7 @@ mbaseline <-function(
 #移動平均処理（NAを省く）
 mSMA <- function(data,l){
 	sma_data = SMA(data,l)
-	res = sma_data[l,length(sma_data)]
+	res = sma_data[l:length(sma_data)]
 }
 
 #タスク期間を色付けして描画
@@ -228,6 +241,17 @@ gaussianW <- function(data,m){
 	for(i in 1:data_length){
 			gau <- exp(((-2*(m^2))/(data_length-1)^2)*(i-(data_length-1)/2)^2)
 			result <- append(result,(data[i]*gau))
+	}
+	return(result)
+}
+
+#ブラックマンハリス窓
+blackman <- function(data){
+	data_length <- length(data)
+	result <- NULL
+	for(i in 1:data_length){
+		blk <- 0.35875-0.48829*cos(2*pi*i)+0.14128*cos(4*pi*i)-0.01168*cos(6*pi*i)
+		result <- append(result,(data[i]*blk))
 	}
 	return(result)
 }
