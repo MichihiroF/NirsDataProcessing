@@ -1,34 +1,33 @@
-#@date = 2012/07/16
-#未完成(とりあえず動く)
-#nirs_analysis.Rの関数も使用
 ######################################################
-
-#パッケージ
+#必要なパッケージ
 library(psych)
 library(MCMCpack)
 
-#引数の説明
+##引数の説明
 #data：NIRSデータ(行：時系列　列：被験者)
-#std：標準化の有無
-#fft：フーリエ変換の有無
-#select：データ削減の有無
-#max_Hz：使用する周波数帯域の最大値(最大5Hz)
-#s_number：因子分析に使用する行のデータ数
 #fmethod：パラメータ推定方法 (ml,pa,gls,wls,minres)
 #fa_rotate：回転方法 visible：結果の表示
-#visible：結果の表示
+#std：標準化の有無
+#dif：時系列データの差分をとる(diff関数を適用する)
+#fft：フーリエ変換の有無
+#max_Hz：使用する周波数帯域の最大値(最大5Hz)
+#window：フーリエ変換の際に窓関数を適用するかどうか(hamming窓)
+#select：データ削減の有無
+#s_number：因子分析に使用する行のデータ数
+#visible：結果の表示(今は因子1と因子2を軸に表示するのみ)
+#cluster：因子分析結果のクラスタリング(k-means)
 
 mfactanal <- function(
 		data,
+		fmethod,
+		fa_rotate,
 		std =FALSE,
 		dif = FALSE,
 		fft=FALSE,
+		max_Hz = 5,
 		window = FALSE,
 		select = FALSE,
-		max_Hz = 5,
 		s_number,
-		fmethod,
-		fa_rotate,
 		visible=TRUE,
 		cluster=TRUE){
 	#被験者数とデータ長の取得
@@ -102,12 +101,12 @@ mfactanal <- function(
 	###########Parallel Analysis
 	pa_res <- fa.parallel(sel_res,fa="n")
 	fnumber <- pa_res$nfact
-
+	
 	###########Factor analysis###########
 	#fm = ml,pa,gls,wls,minres
 	factres = fa(sel_res, nfactors=fnumber ,rotate=fa_rotate, fm=fmethod, scores=T)
 
-	#結果Logの出力
+	#結果Logの出力(微妙)
 	###########結果の表示###########
 	if((visible==TRUE) && (fnumber >1)){
 		par(ps=24);axis(side=4,labels=F);
@@ -118,8 +117,8 @@ mfactanal <- function(
 		#barplot(factres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");
 		#axis(side=2,at=c(-0.2,0.0,1.0));
 	}
-	if((visible==TRUE) && (fnumber >1000)){
-		par(mfrow=c(3,1),mex=0.8,ps=25,at=c(-0.2,0.0,1.0))
+	if((visible==TRUE) && (fnumber >100000)){
+		par(mfrow=c(2,1),mex=0.8,ps=25,at=c(-0.2,0.0,1.0))
 		barplot(factres$loading[,1],ylim=c(-0.2,1.0),yaxt="n");
 		axis(side=2,at=c(-0.2,0.0,1.0));
 		barplot(factres$loading[,2],ylim=c(-0.2,1.0),yaxt="n");
@@ -139,7 +138,7 @@ mfactanal <- function(
 	return(list(factres=factres,cluster=clst,dif_res=dif_res,pa = pa_res,s_res=s_res,win_res=win_res,fft_res=fft_res))
 }
 
-multi_est <- function(dt,rotate){
+comp_est_Method_FA<- function(dt,rotate){
 	fa_n= fa.parallel(dt,fa="fa")$nfact
 	fa_rotate = rotate
 	#最尤法(psych)(ML)
