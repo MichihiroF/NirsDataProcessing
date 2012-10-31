@@ -1,12 +1,15 @@
-#@date = 2012/07/23
-#ETG-7100対応
 #####実装関数
-# nirs_dataset：nirsデータの読み込み
-# nirs_fft：フーリエ変換
-# hamming：ハミング関数を作成
-# baseline：ベースライン処理
-# mSMA：移動平均処理
-#窓関数色々：短絡、ハミング、ハニング、ガウス
+# nirs_dataset()：nirsデータの読み込み(ETG-7100)
+# nirs_hot()：データ読み込み(nirs_hot)
+# nirs_fft()：フーリエ変換
+# hamming()：ハミング関数を作成
+# mbaseline()：ベースライン処理
+# mSMA()：移動平均処理
+# task_plot()：作図
+# ftest()：nirs用にt検定(select_dataと併せて使うほうが良い)
+# eeps(),eeps2()：簡易図保存
+
+#窓関数色々：短絡、ハミング、ハニング、ガウス、ブラックマンハリス
 ######################################################
 #パッケージ
 library(TTR) #移動平均用
@@ -112,7 +115,7 @@ nirs_fft <- function(data,visible=FALSE){
 		par(mfrow = c(2,1))
 		plot(t,wave,type="l")
 		xmax = samplefreq/2
-		plot(f,spec,type="l",col = "navy",xlim=c(0,xmax))
+		plot(f,spec,type="l",col = "navy",xlim=c(0,10))
 	}
 	s_number = round(sampling/2)
 	f <- f[1:s_number]
@@ -129,9 +132,15 @@ select_data <- function(data,s){
 	return(list(result = result,s_number = s))
 }
 
-#簡易図保存
+#簡易図保存1
 eeps <- function(){
 	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
+	dev.off()
+}
+
+#簡易図保存2
+eeps2 <- function(filename){
+	dev.copy2eps(file=paste(filename,"eps",sep="."))
 	dev.off()
 }
 
@@ -194,6 +203,13 @@ task_plot <- function(data,start,end,y_lim,x_lab,y_lab){
 	rect(x0,y0,x1,y1,col = bgname,density=10);axis(side=2,at=y_lim-0.1);axis(side=1,at=c(x0,x1));
 }
 
+#レストとタスクでt検定
+ftest <- function(data,resttime,tasktime,alt){
+	rest=data[resttime]
+	task=data[tasktime]
+	res=t.test(rest,task,alternative =alt)
+	return(list(pval = res$p.value,tval = res$statistic))
+}
 ##############窓関数###############
 #短径窓を掛ける
 rectangularW <- function(data){
