@@ -22,7 +22,7 @@ mfactanal <- function(
 		fmethod,
 		fa_rotate,
 		std =FALSE,
-		dif = FALSE,
+		difference = FALSE,
 		fft=FALSE,
 		max_Hz = 5,
 		window = FALSE,
@@ -35,7 +35,7 @@ mfactanal <- function(
 	data_length <- length(data[,1])
 	
 	#####ラグ処理#####
-	if(dif == TRUE){
+	if(difference == TRUE){
 		print("DIFF")
 		dif_data <- NULL
 		for(i in 1:nnumber){
@@ -65,7 +65,7 @@ mfactanal <- function(
 	if(window == TRUE){
 		win_data <- NULL
 		for(i in 1:nnumber){
-			tmp <- hammingW(s_res[,i])
+			tmp <- hanningW(s_res[,i])
 			win_data <- append(win_data,tmp)
 		}
 		win_res <- matrix(win_data,data_length,nnumber)
