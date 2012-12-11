@@ -2,12 +2,15 @@
 # nirs_dataset()：nirsデータの読み込み(ETG-7100)
 # nirs_hot()：データ読み込み(nirs_hot)
 # nirs_fft()：フーリエ変換
-# hamming()：ハミング関数を作成
 # mbaseline()：ベースライン処理
 # mSMA()：移動平均処理
 # task_plot()：作図
 # ftest()：nirs用にt検定(select_dataと併せて使うほうが良い)
+# select_data()：時系列データをn点ごとに抜き出す
 # eeps(),eeps2()：簡易図保存
+# overrap_fft()：FFTのオーバーラップ加算平均
+# overrap_fft2()：FFTのオーバーラップ処理。加算はせず、全データをはきだす
+# mfreq_plot：周波数の時間変化可視化関数
 
 #窓関数色々：短絡、ハミング、ハニング、ガウス、ブラックマンハリス
 ######################################################
@@ -99,9 +102,12 @@ nirs_hot <- function(dirname,filename){
 
 # フーリエ変換
 nirs_freq = 10
-nirs_fft <- function(data,visible=FALSE){
+nirs_fft <- function(data,visible=FALSE,window = FALSE){
 	if (!is.numeric(data)) {
 		stop("not numeric !")
+	}
+	if(window == TRUE){
+		data = hanningW(data)
 	}
 	sampling = (length(data))
 	n = 0:(sampling-1)
@@ -115,13 +121,88 @@ nirs_fft <- function(data,visible=FALSE){
 		par(mfrow = c(2,1))
 		plot(t,wave,type="l")
 		xmax = samplefreq/2
-		plot(f,spec,type="l",col = "navy",xlim=c(0,10))
+		plot(f,spec,type="l",col = "navy",xlim=c(0,xmax))
 	}
 	s_number = round(sampling/2)
 	f <- f[1:s_number]
 	spec = spec[1:s_number]
 	return(list(freq = f,s=s_number,spect = spec))
 }
+
+#FFTのオーバーラップ加算平均
+overrap_fft <- function(data,window_size,overrap_rate){
+	data_size = length(data)
+	shift = floor(window_size*overrap_rate/100)
+	#cat("data_size:");print(data_size)
+	#cat("Shift:");print(shift)
+	count = 0
+	top = 0
+	while(top <= data_size){
+		if(count >= 1){
+			bottom = (top+1)-shift
+			top = top+window_size-shift
+		}
+		else{
+			bottom = 1
+			top = window_size
+		}
+		#cat("Bottom:");print(bottom)
+		#cat("Top   :");print(top)
+		count = count+1
+	}
+	max_count = count-1
+	total_spec_data = 0
+	#cat("MAXCOUNT:");print(max_count)
+	for(i in 1:max_count){
+		if(i > 1){
+			bottom = (top+1)-shift
+			top = top+window_size-shift
+		}
+		else{
+			bottom = 1
+			top = window_size
+		}
+		spec_data = nirs_fft(data[bottom:top],window=TRUE)$spect
+		total_spec_data = total_spec_data + spec_data
+	}
+	res = total_spec_data/max_count
+	return(res)
+}
+
+#FFTのオーバーラップ処理
+overrap_fft2 <- function(data,window_size,overrap_rate){
+	data_size = length(data)
+	shift = floor(window_size*overrap_rate/100)
+	count = 0
+	top = 0
+	while(top <= data_size){
+		if(count >= 1){
+			bottom = (top+1)-shift
+			top = top+window_size-shift
+		}
+		else{
+			bottom = 1
+			top = window_size
+		}
+		count = count+1
+	}
+	max_count = count-1
+	total_spec_data = 0
+	for(i in 1:max_count){
+		if(i > 1){
+			bottom = (top+1)-shift
+			top = top+window_size-shift
+		}
+		else{
+			bottom = 1
+			top = window_size
+		}
+		spec_data = nirs_fft(data[bottom:top],window=TRUE)$spect
+		total_spec_data = append(total_spec_data,spec_data)
+	}
+	return(total_spec_data)
+}
+
 
 #データを間引く
 select_data <- function(data,s){
@@ -203,6 +284,14 @@ task_plot <- function(data,start,end,y_lim,x_lab,y_lab){
 	rect(x0,y0,x1,y1,col = bgname,density=10);axis(side=2,at=y_lim-0.1);axis(side=1,at=c(x0,x1));
 }
 
+#回帰直線つき散布図
+liner_plot <- function(dt){
+	a = lm(dt~c(1:length(dt)))$coefficients[2]
+	b = lm(dt~c(1:length(dt)))$coefficients[1]
+	plot(dt);abline(b,a,col="red")
+	return(a)
+}
+
 #レストとタスクでt検定
 ftest <- function(data,resttime,tasktime,alt){
 	rest=data[resttime]
@@ -210,6 +299,18 @@ ftest <- function(data,resttime,tasktime,alt){
 	res=t.test(rest,task,alternative =alt)
 	return(list(pval = res$p.value,tval = res$statistic))
 }
+
+#周波数の時間変化可視化関数
+#datは時系列データ、densityは階調値（8あたりが標準）
+mfreq_plot <- function(dat,density){
+	res = overrap_fft2(dat,256,99)
+	x <-1:(length(res)/128)
+	y <- nirs_fft(dat[1:256])$freq
+	z <- matrix(res[2:length(res)],length(res)/length(x),length(x))
+	filled.contour(x,y,t(z),nlevels=density,col=gray((density:0)/density),ylab="Frequency",xlab="FFT count")
+}
+
+
 ##############窓関数###############
 #短径窓を掛ける
 rectangularW <- function(data){
