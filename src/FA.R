@@ -75,12 +75,15 @@ mfactanal <- function(
 	
 	if(fft == TRUE){
 		print("FFT")
+		window_size <- 256
 		fft_data <- NULL
 		for(i in 1:nnumber){
-			tmp <- nirs_fft(win_res[,i],F)$spect
+			tmp <- overrap_fft(win_res[,i],window_size,90)
+			#tmp <- nirs_fft(win_res[,i],F)$spect
 			fft_data <- append(fft_data,tmp)
 		}
-		fft_res <- matrix(fft_data,data_length/2,nnumber)
+		fft_res <- matrix(fft_data,window_size/2,nnumber)
+		#fft_res <- matrix(fft_data,data_length/2,nnumber)
 	}else{
 		fft_res <- win_res
 	}
