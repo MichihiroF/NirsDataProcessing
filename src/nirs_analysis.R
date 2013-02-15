@@ -215,7 +215,12 @@ select_data <- function(data,s){
 
 #簡易図保存1
 eeps <- function(){
-	dev.copy2eps(file=paste(as.POSIXlt(Sys.time()),"eps",sep="."))
+  ym = paste(as.POSIXlt(Sys.time())$year+1900,as.POSIXlt(Sys.time())$mon,sep="")
+  ymd = paste(ym,as.POSIXlt(Sys.time())$mday,sep="")
+  ymdh = paste(ymd,as.POSIXlt(Sys.time())$hour,sep="")
+  ymdhm = paste(ymdh,as.POSIXlt(Sys.time())$min,sep="")
+  ymdhms = paste(ymdhm,round(as.POSIXlt(Sys.time())$sec),sep="")
+	dev.copy2eps(file=paste(ymdhms,"eps",sep="."))
 	dev.off()
 }
 
